@@ -415,8 +415,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   player: {fileID: 982261408}
-  playerRotation: {x: 0, y: 0, z: 0, w: 0}
-  offsetVector: {x: 0, y: 1, z: 0}
+  offset: {x: 0, y: 1.5, z: -5}
+  rotationSpeed: 5
+  minYAngle: -120
+  maxYAngle: -20
+  minDistance: 1
 --- !u!1 &982261407
 GameObject:
   m_ObjectHideFlags: 0

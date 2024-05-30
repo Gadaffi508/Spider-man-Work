@@ -3,6 +3,7 @@ using UnityEngine;
 public class PlayerMovement : MonoBehaviour
 {
     //<----------------------------Public-Variables-------------------------->
+    [Header("Character Values")]
     public float speed;
     public float runSpeed;
     public int jumpForce;
@@ -43,27 +44,29 @@ public class PlayerMovement : MonoBehaviour
         else
             StateFast(speed, 0, 0.1f);
 
-        if ((inputJump && groundCheck) is true)
+        if (inputJump && groundCheck)
             Jump();
 
         anim.SetFloat("velocity", rb.linearVelocity.magnitude, 0.01f, Time.deltaTime);
+
+        Vector3 movement = new Vector3(_X, 0, _Y);
+        if (movement.magnitude > 0.1f)
+        {
+            lookDirection = movement.normalized;
+        }
     }
 
     private void FixedUpdate()
     {
         velocity = new Vector3(_X * currentSpeed * Time.deltaTime, rb.linearVelocity.y, _Y * currentSpeed * Time.deltaTime);
 
-        if (velocity != Vector3.zero)
-        {
-            lookDirection = transform.rotation * velocity;
-            lookDirection.y = 0f; // Ensure character looks horizontally
-            transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(lookDirection), Time.deltaTime * 10f); // Smooth rotation
-        }
-        velocity = transform.TransformDirection(velocity) * currentSpeed * Time.deltaTime;
-
-        velocity.y = rb.linearVelocity.y;
-
         rb.linearVelocity = velocity;
+
+        if (lookDirection.magnitude > 0.1f)
+        {
+            Quaternion targetRotation = Quaternion.LookRotation(lookDirection);
+            rb.rotation = Quaternion.Slerp(rb.rotation, targetRotation, Time.deltaTime * 10f);
+        }
     }
 
     void StateFast(float _speed, int _state, float _dampTime)

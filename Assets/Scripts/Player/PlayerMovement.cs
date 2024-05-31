@@ -75,11 +75,13 @@ public class PlayerMovement : MonoBehaviour
 
     private void FixedUpdate()
     {
-        if (lookDirection == Vector3.zero) return;
+        if (lookDirection == Vector3.zero) 
+            return;
 
         rb.linearVelocity = Velocity();
 
-        rb.rotation = Rotation();
+        if(!wallRunning) 
+            rb.rotation = Rotation();
     }
 
     void StateFast(float _speed, int _state, float _dampTime,MovementState _mState)

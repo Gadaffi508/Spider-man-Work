@@ -17,15 +17,12 @@ public class WallRun : MonoBehaviour
     public Transform orientation;
 
     [Header("Input")]
-    public KeyCode upWardsRunKey = KeyCode.Q;
     public KeyCode downWardsRunKey = KeyCode.E;
 
     private PlayerMovement pm;
 
     private Rigidbody rb;
 
-    private RaycastHit leftWallHit;
-    private RaycastHit rightWallHit;
     private RaycastHit forwardWallHit;
 
     private bool wallLeft;
@@ -34,7 +31,6 @@ public class WallRun : MonoBehaviour
     private bool upwardsRunning, downwardsRunning;
 
     private float _X, _Y;
-    private float wallRunTime;
 
     private void Start()
     {
@@ -56,9 +52,16 @@ public class WallRun : MonoBehaviour
 
     void CheckForWall()
     {
-        wallRight = Physics.Raycast(transform.position, orientation.right, out rightWallHit, wallCheckDistance, whatIsWall);
-        wallLeft = Physics.Raycast(transform.position, -orientation.right, out leftWallHit, wallCheckDistance, whatIsWall);
         wallForward = Physics.Raycast(transform.position, orientation.forward, out forwardWallHit, wallCheckDistance, whatIsWall);
+
+        if (wallForward)
+        {
+            upwardsRunning = WallTouched();
+        }
+        else
+        {
+            upwardsRunning = false;
+        }
     }
 
     void StateMachine()
@@ -66,7 +69,6 @@ public class WallRun : MonoBehaviour
         _X = Input.GetAxisRaw("Horizontal");
         _Y = Input.GetAxisRaw("Vertical");
 
-        upwardsRunning = Input.GetKey(upWardsRunKey);
         downwardsRunning = Input.GetKey(downWardsRunKey);
 
         if ((wallLeft || wallRight || wallForward) && _Y > 0 && AboveGround())
@@ -91,7 +93,7 @@ public class WallRun : MonoBehaviour
         rb.useGravity = false;
         rb.linearVelocity = new Vector3(rb.linearVelocity.x, 0f, rb.linearVelocity.z);
 
-        Vector3 wallNormal = wallRight ? rightWallHit.normal : leftWallHit.normal;
+        Vector3 wallNormal = forwardWallHit.normal;
         Vector3 wallForward = Vector3.Cross(wallNormal, transform.up);
 
         if ((orientation.forward - wallForward).magnitude > (orientation.forward - -wallForward).magnitude)
@@ -107,6 +109,15 @@ public class WallRun : MonoBehaviour
 
         if (!(wallLeft && _X > 0) && !(wallRight && _X < 0))
             rb.AddForce(-wallForward * 100, ForceMode.Force);
+
+        Vector3 lookDirection = -wallNormal;
+        lookDirection.y = 0;
+        if (lookDirection != Vector3.zero)
+        {
+            Quaternion targetRotation = Quaternion.LookRotation(lookDirection);
+
+            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * 10);
+        }
     }
 
     void StopWallRun()
@@ -118,5 +129,24 @@ public class WallRun : MonoBehaviour
     bool AboveGround()
     {
         return !Physics.Raycast(transform.position, Vector3.down, minJumpHeight, whatIsGround);
+    }
+
+    bool WallTouched()
+    {
+        float distanceToWall = forwardWallHit.distance;
+        if (distanceToWall < 0.5f)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    private void OnDrawGizmos()
+    {
+        Gizmos.color = Color.green;
+        Gizmos.DrawLine(transform.position,forwardWallHit.point);
     }
 }

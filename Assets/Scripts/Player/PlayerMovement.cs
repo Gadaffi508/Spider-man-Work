@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public enum MovementState { idle, walk, sprinting, wallrunning }
+public enum MovementState { idle, walk, sprinting, wallrunning,spider }
 
 public class PlayerMovement : MonoBehaviour
 {
@@ -17,8 +17,9 @@ public class PlayerMovement : MonoBehaviour
     [Header("State")]
     public MovementState state;
 
+    [Header("Components")]
     //<----------------------------Private-Variables-------------------------->
-    private Animator anim;
+    public Animator anim;
     private Rigidbody rb;
 
     private float _X, _Y;

@@ -1,11 +1,19 @@
+using System.Collections;
+using System.Security.Cryptography;
 using UnityEngine;
 using UnityEngine.Animations.Rigging;
 
 public class Grappling : MonoBehaviour
 {
+    [Header("Options")]
+
     public LayerMask whatIsGrappleable;
 
     public Transform player;
+
+    public float AnimationDuration = 0;
+
+    //<----------------------------------------------------------------->
 
     private float maxDistance = 100;
 
@@ -27,49 +35,33 @@ public class Grappling : MonoBehaviour
 
         pm = GetComponentInParent<PlayerMovement>();
 
-        lineRenderer.positionCount = 0;
     }
 
     private void Update()
     {
         if (Input.GetMouseButtonDown(0) && !pm.wallRunning)
-        {
-            StartGrapple();
-        }
-        else if (Input.GetMouseButtonUp(0))
-        {
-            StopGrapple();
-        }
-    }
+            StartCoroutine(AnimationLine());
 
-    private void LateUpdate() => DrawRope();
+        else if (Input.GetMouseButtonUp(0))
+            StopGrapple();
+
+        if (Input.GetMouseButton(0))
+            lineRenderer.SetPosition(0, transform.position);
+
+        AnimationDuration += Time.deltaTime;
+    }
 
     void StartGrapple()
     {
         RaycastHit hit;
         if (Physics.Raycast(transform.position, transform.forward, out hit, maxDistance, whatIsGrappleable))
         {
-            pm.anim.SetBool("spider",true);
-
             grapplePoint = hit.point;
+            pm.anim.SetBool("spider", true);
 
             joint = player.gameObject.AddComponent<SpringJoint>();
 
-            joint.autoConfigureConnectedAnchor = false;
-            joint.connectedAnchor = grapplePoint;
-
-            float distanceFromPoint = Vector3.Distance(player.position, grapplePoint);
-
-            joint.maxDistance = distanceFromPoint * 0.8f;
-            joint.minDistance = distanceFromPoint * 0.25f;
-
-            joint.spring = 4.5f;
-            joint.damper = 7f;
-            joint.massScale = 4.5f;
-
-            constraint.weight = 1;
-
-            lineRenderer.positionCount = 2;
+            SpringJointOptions();
         }
     }
 
@@ -79,15 +71,42 @@ public class Grappling : MonoBehaviour
 
         pm.anim.SetBool("spider", false);
 
-        lineRenderer.positionCount = 0;
         Destroy(joint);
     }
 
-    void DrawRope()
+    void SpringJointOptions()
     {
-        if(!joint) return;
+        joint.autoConfigureConnectedAnchor = false;
+        joint.connectedAnchor = grapplePoint;
 
-        lineRenderer.SetPosition(0, transform.position);
-        lineRenderer.SetPosition(1, grapplePoint);
+        float distanceFromPoint = Vector3.Distance(player.position, grapplePoint);
+
+        joint.maxDistance = distanceFromPoint * 0.8f;
+        joint.minDistance = distanceFromPoint * 0.25f;
+
+        joint.spring = 4.5f;
+        joint.damper = 7f;
+        joint.massScale = 4.5f;
+    }
+
+    IEnumerator AnimationLine()
+    {
+        AnimationDuration = 0;
+
+        while (AnimationDuration < 1)
+        {
+            constraint.weight = AnimationDuration;
+
+            lineRenderer.SetPosition(1, AnimationLinerenderer());
+
+            yield return null;
+        }
+
+        StartGrapple();
+    }
+
+    Vector3 AnimationLinerenderer()
+    {
+        return Vector3.Lerp(transform.position, grapplePoint, AnimationDuration);
     }
 }

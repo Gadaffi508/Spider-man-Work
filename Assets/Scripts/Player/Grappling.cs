@@ -93,10 +93,15 @@ public class Grappling : MonoBehaviour
     {
         AnimationDuration = 0;
 
-        while (AnimationDuration < 1)
+        while(AnimationDuration < 0.3f)
         {
             constraint.weight = AnimationDuration;
 
+            yield return null;
+        }
+
+        while (AnimationDuration < 0.7f)
+        {
             lineRenderer.SetPosition(1, AnimationLinerenderer());
 
             yield return null;

@@ -5,23 +5,21 @@ using UnityEngine.Animations.Rigging;
 
 public class Grappling : MonoBehaviour
 {
-    [Header("Options")]
-
-    public LayerMask whatIsGrappleable;
+    [Header("Options")] public LayerMask whatIsGrappleable;
 
     public Transform player;
 
-    public float AnimationDuration = 0;
+    public GameObject line;
 
     //<----------------------------------------------------------------->
 
     private float maxDistance = 100;
 
-    private LineRenderer lineRenderer;
-
     private Vector3 grapplePoint;
 
     private TwoBoneIKConstraint constraint;
+
+    private LineRenderer lineRenderer;
 
     private PlayerMovement pm;
 
@@ -29,26 +27,21 @@ public class Grappling : MonoBehaviour
 
     private void Start()
     {
-        lineRenderer = GetComponent<LineRenderer>();
-
         constraint = GetComponentInParent<TwoBoneIKConstraint>();
 
         pm = GetComponentInParent<PlayerMovement>();
-
     }
 
     private void Update()
     {
         if (Input.GetMouseButtonDown(0) && !pm.wallRunning)
-            StartCoroutine(AnimationLine());
+            AnimationLine();
 
-        else if (Input.GetMouseButtonUp(0))
+        if (Input.GetMouseButtonUp(0))
             StopGrapple();
 
         if (Input.GetMouseButton(0))
-            lineRenderer.SetPosition(0, transform.position);
-
-        AnimationDuration += Time.deltaTime;
+            lineRenderer?.SetPosition(0, transform.position);
     }
 
     void StartGrapple()
@@ -72,6 +65,7 @@ public class Grappling : MonoBehaviour
         pm.anim.SetBool("spider", false);
 
         Destroy(joint);
+        joint = null;
     }
 
     void SpringJointOptions()
@@ -89,29 +83,27 @@ public class Grappling : MonoBehaviour
         joint.massScale = 4.5f;
     }
 
-    IEnumerator AnimationLine()
+    void AnimationLine()
     {
-        AnimationDuration = 0;
+        lineRenderer = null;
 
-        while(AnimationDuration < 0.3f)
-        {
-            constraint.weight = AnimationDuration;
+        lineRenderer = SpiderWeb();
 
-            yield return null;
-        }
-
-        while (AnimationDuration < 0.7f)
-        {
-            lineRenderer.SetPosition(1, AnimationLinerenderer());
-
-            yield return null;
-        }
+        constraint.weight = 1;
+        
+        lineRenderer.SetPosition(1, AnimationLinerenderer());
 
         StartGrapple();
     }
 
     Vector3 AnimationLinerenderer()
     {
-        return Vector3.Lerp(transform.position, grapplePoint, AnimationDuration);
+        return Vector3.Lerp(transform.position, grapplePoint, 1);
+    }
+
+    LineRenderer SpiderWeb()
+    {
+        GameObject _line = Instantiate(line);
+        return _line.GetComponent<LineRenderer>();
     }
 }

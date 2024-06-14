@@ -57,7 +57,7 @@ public class PlayerMovement : MonoBehaviour
             StateFast(runSpeed, 1, 0.5f,MovementState.sprinting);
         else
             StateFast(speed, 0, 0.1f, MovementState.walk);
-
+        
         if (inputJump && groundCheck)
             Jump();
 
